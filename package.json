@@ -13,7 +13,7 @@
     "n3"
   ],
   "main": "dist/index.js",
-  "typings": "index",
+  "typings": "dist/index.d.ts",
   "repository": "git@github.com:rubensworks/rdf-string-ttl.js.git",
   "author": "Ruben Taelman <rubensworks@gmail.com>",
   "funding": {
