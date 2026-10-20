@@ -1,3 +1,18 @@
+<img src=".github/rdf-array-logo.png" alt="[rdf-string-ttl]" width="96" align="right">
+
+# rdf-string-ttl-array: rdf-string-ttl for RDF-
+
+**RDF-** fork of [rdf-string-ttl](https://github.com/rubensworks/rdf-string-ttl.js) for a data model
+whose fifth kind of term is the **sequence** (`termType: "Sequence"`, see
+[rdf-data-factory-array](https://github.com/rdf-array/rdf-data-factory-array)): `termToString` spells a
+sequence in Turtle as `(<http://ex.org/a> "a b" "1"^^<http://www.w3.org/2001/XMLSchema#integer> _:b ?v)`,
+nested sequences and quoted triples as they are, and `stringToTerm` reads it back through a quote- and
+nesting-aware term splitter that the quoted-triple branch now uses too. Part of the
+[comunica-array](https://github.com/rdf-array/comunica-array) stack, whose doc/rdf-array.md lists the
+sibling forks.
+
+---
+
 # RDF String Turtle
 
 [![Build status](https://github.com/rubensworks/rdf-string-ttl.js/workflows/CI/badge.svg)](https://github.com/rubensworks/rdf-string-ttl.js/actions?query=workflow%3ACI)

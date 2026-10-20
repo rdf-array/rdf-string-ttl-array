@@ -45,7 +45,74 @@ export function termToString<T extends RDF.Term | undefined | null>(term: T): T 
     case 'Quad': return <any> (`<<${termToString(term.subject)} ${termToString(term.predicate)} ${termToString(term.object)}${term.graph.termType === 'DefaultGraph' ? '' : ` ${termToString(term.graph)}`}>>`);
     case 'Variable': return <any> (`?${term.value}`);
     case 'DefaultGraph': return <any> term.value;
+    // RDF-: a sequence spells its elements between parentheses
+    case 'Sequence': return <any> (`(${term.elements.map(element => termToString(element)).join(' ')})`);
   }
+}
+
+/**
+ * Split a space-separated list of string-based terms, ignoring spaces inside quotes,
+ * inside `<` `>` (and `<<` `>>`), and inside nested `(` `)`.
+ * @param {string} terms The list, without its enclosing delimiters.
+ * @param {string} value The whole string, for error messages.
+ * @return {string[]} The string-based terms.
+ */
+function splitTerms(terms: string, value: string): string[] {
+  const stringTerms: string[] = [];
+  let tagDepth = 0;
+  let parenDepth = 0;
+  let inQuote = false;
+  let lastIndex = 0;
+  terms = terms.trim();
+  for (let i = 0; i < terms.length; i++) {
+    const char = terms[i];
+    if (char === '"') {
+      // Only an unescaped quote opens or closes a string
+      let escaped = false;
+      let j = i;
+      while (j-- > 0 && terms[j] === '\\') {
+        escaped = !escaped;
+      }
+      if (!escaped) {
+        inQuote = !inQuote;
+      }
+    } else if (!inQuote) {
+      if (char === '<') {
+        tagDepth++;
+      } else if (char === '>') {
+        if (tagDepth === 0) {
+          throw new Error(`Found closing tag without opening tag in ${value}`);
+        }
+        tagDepth--;
+      } else if (tagDepth === 0 && char === '(') {
+        parenDepth++;
+      } else if (tagDepth === 0 && char === ')') {
+        if (parenDepth === 0) {
+          throw new Error(`Found closing parenthesis without opening parenthesis in ${value}`);
+        }
+        parenDepth--;
+      } else if (char === ' ' && tagDepth === 0 && parenDepth === 0) {
+        stringTerms.push(terms.slice(lastIndex, i));
+        while (terms[i + 1] === ' ') {
+          i += 1;
+        }
+        lastIndex = i + 1;
+      }
+    }
+  }
+  if (tagDepth !== 0) {
+    throw new Error(`Found opening tag without closing tag in ${value}`);
+  }
+  if (parenDepth !== 0) {
+    throw new Error(`Found opening parenthesis without closing parenthesis in ${value}`);
+  }
+  if (inQuote) {
+    throw new Error(`Found opening quote without closing quote in ${value}`);
+  }
+  if (terms.length > lastIndex) {
+    stringTerms.push(terms.slice(lastIndex));
+  }
+  return stringTerms;
 }
 
 /**
@@ -142,35 +209,21 @@ export function stringToTerm(value: string | undefined, dataFactory?: RDF.DataFa
       const type: RDF.NamedNode = dataFactory.namedNode(getLiteralType(value));
       return dataFactory.literal(getLiteralValue(value), language ? { language, direction } : type);
     }
+    case '(': {
+      // RDF-: `(e1 e2 ...)` is a sequence term
+      if (!dataFactory.sequence) {
+        throw new Error(`Missing 'sequence()' method on the given DataFactory`);
+      }
+      if (!value.endsWith(')')) {
+        throw new Error(`Sequence syntax error ${value}`);
+      }
+      return dataFactory.sequence(splitTerms(value.slice(1, -1), value)
+        .map(element => stringToTerm(element, dataFactory)));
+    }
     case '<':
     default:
       if (value.startsWith('<<') && value.endsWith('>>')) {
-        // Iterate character-by-character to detect spaces that are *not* wrapped in <<>>
-        const terms = value.slice(2, -2);
-        const stringTerms: string[] = [];
-        let ignoreTags = 0;
-        let lastIndex = 0;
-        for (let i = 0; i < terms.length; i++) {
-          const char = terms[i];
-          if (char === '<') {
-            ignoreTags++;
-          }
-          if (char === '>') {
-            if (ignoreTags === 0) {
-              throw new Error(`Found closing tag without opening tag in ${value}`);
-            } else {
-              ignoreTags--;
-            }
-          }
-          if (char === ' ' && ignoreTags === 0) {
-            stringTerms.push(terms.slice(lastIndex, i));
-            lastIndex = i + 1;
-          }
-        }
-        if (ignoreTags !== 0) {
-          throw new Error(`Found opening tag without closing tag in ${value}`);
-        }
-        stringTerms.push(terms.slice(lastIndex, terms.length));
+        const stringTerms = splitTerms(value.slice(2, -2), value);
 
         // We require 3 or 4 components
         if (stringTerms.length !== 3 && stringTerms.length !== 4) {
@@ -178,10 +231,10 @@ export function stringToTerm(value: string | undefined, dataFactory?: RDF.DataFa
         }
 
         return dataFactory.quad(
-          stringToTerm(stringTerms[0]),
-          stringToTerm(stringTerms[1]),
-          stringToTerm(stringTerms[2]),
-          stringTerms[3] ? stringToTerm(stringTerms[3]) : undefined,
+          stringToTerm(stringTerms[0], dataFactory),
+          stringToTerm(stringTerms[1], dataFactory),
+          stringToTerm(stringTerms[2], dataFactory),
+          stringTerms[3] ? stringToTerm(stringTerms[3], dataFactory) : undefined,
         );
       }
       if (!value.startsWith('<') || !value.endsWith('>')) {
