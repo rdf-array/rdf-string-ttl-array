@@ -48,7 +48,7 @@ function termToString(term) {
         case 'Quad': return (`<<${termToString(term.subject)} ${termToString(term.predicate)} ${termToString(term.object)}${term.graph.termType === 'DefaultGraph' ? '' : ` ${termToString(term.graph)}`}>>`);
         case 'Variable': return (`?${term.value}`);
         case 'DefaultGraph': return term.value;
-        // RDF-: a sequence spells its elements between parentheses
+        // rdf-array: a sequence spells its elements between parentheses
         case 'Sequence': return (`(${term.elements.map(element => termToString(element)).join(' ')})`);
     }
 }
@@ -210,7 +210,7 @@ function stringToTerm(value, dataFactory) {
             return dataFactory.literal(getLiteralValue(value), language ? { language, direction } : type);
         }
         case '(': {
-            // RDF-: `(e1 e2 ...)` is a sequence term
+            // rdf-array: `(e1 e2 ...)` is a sequence term
             if (!dataFactory.sequence) {
                 throw new Error(`Missing 'sequence()' method on the given DataFactory`);
             }

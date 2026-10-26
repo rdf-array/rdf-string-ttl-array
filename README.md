@@ -1,6 +1,6 @@
 <img src=".github/rdf-array-logo.png" alt="[rdf-string-ttl]" width="96" align="right">
 
-# rdf-string-ttl-array: rdf-string-ttl for RDF-
+# rdf-string-ttl-array: rdf-string-ttl for rdf-array
 
 **RDF-** fork of [rdf-string-ttl](https://github.com/rubensworks/rdf-string-ttl.js) for a data model
 whose fifth kind of term is the **sequence** (`termType: "Sequence"`, see

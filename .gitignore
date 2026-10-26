@@ -6,4 +6,4 @@ coverage
 documentation
 .eslintcache
 
-# RDF-: the build output is committed, so that a git install works under yarn 1 (which runs no prepare script)
+# rdf-array: the build output is committed, so that a git install works under yarn 1 (which runs no prepare script)

@@ -10,6 +10,8 @@ module.exports = {
     ],
     rules: {
         'no-control-regex': 'off',
-        'no-implicit-coercion': 'off'
+        'no-implicit-coercion': 'off',
+        // rdf-array: comments marked `rdf-array:` start lowercase
+        'capitalized-comments': [ 'error', 'always', { ignoreConsecutiveComments: true, ignorePattern: 'rdf-array' }]
     }
 };

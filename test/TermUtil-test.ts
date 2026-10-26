@@ -476,7 +476,7 @@ describe('TermUtil', () => {
     });
   });
 
-  describe('RDF- sequences', () => {
+  describe('rdf-array sequences', () => {
     const xsdInteger = FACTORY.namedNode('http://www.w3.org/2001/XMLSchema#integer');
     const mixed = FACTORY.sequence([
       FACTORY.namedNode('http://example.org/a'),
