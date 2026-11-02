@@ -476,6 +476,32 @@ describe('TermUtil', () => {
     });
   });
 
+  describe('rdf-undef slots', () => {
+    const slots = FACTORY.sequence([
+      FACTORY.literal('a'),
+      FACTORY.undef(),
+      FACTORY.sequence([ FACTORY.undef() ]),
+      FACTORY.namedNode('undef'),
+    ]);
+
+    it('should spell a slot undef', () => {
+      expect(TermUtil.termToString(slots)).toEqual('("a" undef (undef) <undef>)');
+    });
+
+    it('should read a slot back, and tell it from an IRI of that spelling', () => {
+      expect(TermUtil.stringToTerm('("a" undef (undef) <undef>)').equals(slots)).toBe(true);
+    });
+
+    it('should not read undef outside a sequence', () => {
+      expect(() => TermUtil.stringToTerm('undef')).toThrow('Detected invalid iri');
+    });
+
+    it('should need a factory with undef()', () => {
+      const factory: any = { sequence: FACTORY.sequence.bind(FACTORY), namedNode: FACTORY.namedNode.bind(FACTORY) };
+      expect(() => TermUtil.stringToTerm('(undef)', factory)).toThrow(`Missing 'undef()' method`);
+    });
+  });
+
   describe('rdf-array sequences', () => {
     const xsdInteger = FACTORY.namedNode('http://www.w3.org/2001/XMLSchema#integer');
     const mixed = FACTORY.sequence([

@@ -17,7 +17,7 @@ import type * as RDF from '@rdfjs/types';
  * @param {RDF.Term} term An RDFJS term.
  * @return {string} A string-based term representation.
  */
-export declare function termToString<T extends RDF.Term | undefined | null>(term: T): T extends RDF.Term ? string : undefined;
+export declare function termToString<T extends RDF.SequenceElement | undefined | null>(term: T): T extends RDF.SequenceElement ? string : undefined;
 /**
  * Get the string value of a literal.
  * @param {string} literalValue An RDF literal enclosed by '"'.

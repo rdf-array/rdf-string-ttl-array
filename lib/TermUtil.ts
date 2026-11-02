@@ -22,7 +22,9 @@ const FACTORY = new DataFactory();
  * @param {RDF.Term} term An RDFJS term.
  * @return {string} A string-based term representation.
  */
-export function termToString<T extends RDF.Term | undefined | null>(term: T): T extends RDF.Term ? string : undefined {
+export function termToString<T extends RDF.SequenceElement | undefined | null>(
+  term: T,
+): T extends RDF.SequenceElement ? string : undefined {
   // TODO: remove nasty any casts when this TS bug has been fixed: https://github.com/microsoft/TypeScript/issues/26933
   if (!term) {
     return <any> undefined;
@@ -47,6 +49,8 @@ export function termToString<T extends RDF.Term | undefined | null>(term: T): T 
     case 'DefaultGraph': return <any> term.value;
     // rdf-array: a sequence spells its elements between parentheses
     case 'Sequence': return <any> (`(${term.elements.map(element => termToString(element)).join(' ')})`);
+    // The empty slot of a sequence (rdf-undef), only ever an element
+    case 'Undef': return <any> 'undef';
   }
 }
 
@@ -186,6 +190,18 @@ export function getLiteralDirection(literalValue: string): 'ltr' | 'rtl' | '' {
 }
 
 /**
+ * The empty slot of a sequence (rdf-undef), as the given factory makes it.
+ * @param {RDF.DataFactory} dataFactory A datafactory.
+ * @return {RDF.Undef} The slot.
+ */
+function undefOf(dataFactory: RDF.DataFactory<RDF.BaseQuad>): RDF.Undef {
+  if (!dataFactory.undef) {
+    throw new Error(`Missing 'undef()' method on the given DataFactory`);
+  }
+  return dataFactory.undef();
+}
+
+/**
  * Transform a string-based RDF term to an RDFJS term.
  * @param {string} value A string-based RDF-term.
  * @param {RDF.DataFactory} dataFactory An optional datafactory to create terms with.
@@ -218,7 +234,7 @@ export function stringToTerm(value: string | undefined, dataFactory?: RDF.DataFa
         throw new Error(`Sequence syntax error ${value}`);
       }
       return dataFactory.sequence(splitTerms(value.slice(1, -1), value)
-        .map(element => stringToTerm(element, dataFactory)));
+        .map(element => element === 'undef' ? undefOf(dataFactory) : stringToTerm(element, dataFactory)));
     }
     case '<':
     default:

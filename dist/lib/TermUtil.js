@@ -50,6 +50,8 @@ function termToString(term) {
         case 'DefaultGraph': return term.value;
         // rdf-array: a sequence spells its elements between parentheses
         case 'Sequence': return (`(${term.elements.map(element => termToString(element)).join(' ')})`);
+        // The empty slot of a sequence (rdf-undef), only ever an element
+        case 'Undef': return 'undef';
     }
 }
 /**
@@ -186,6 +188,17 @@ function getLiteralDirection(literalValue) {
     return '';
 }
 /**
+ * The empty slot of a sequence (rdf-undef), as the given factory makes it.
+ * @param {RDF.DataFactory} dataFactory A datafactory.
+ * @return {RDF.Undef} The slot.
+ */
+function undefOf(dataFactory) {
+    if (!dataFactory.undef) {
+        throw new Error(`Missing 'undef()' method on the given DataFactory`);
+    }
+    return dataFactory.undef();
+}
+/**
  * Transform a string-based RDF term to an RDFJS term.
  * @param {string} value A string-based RDF-term.
  * @param {RDF.DataFactory} dataFactory An optional datafactory to create terms with.
@@ -218,7 +231,7 @@ function stringToTerm(value, dataFactory) {
                 throw new Error(`Sequence syntax error ${value}`);
             }
             return dataFactory.sequence(splitTerms(value.slice(1, -1), value)
-                .map(element => stringToTerm(element, dataFactory)));
+                .map(element => element === 'undef' ? undefOf(dataFactory) : stringToTerm(element, dataFactory)));
         }
         case '<':
         default:

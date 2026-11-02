@@ -11,6 +11,11 @@ nesting-aware term splitter that the quoted-triple branch now uses too. Part of 
 [comunica-array](https://github.com/rdf-array/comunica-array) stack, whose doc/rdf-array.md lists the
 sibling forks.
 
+**rdf-undef** (branch `rdf-undef`, [rdf-undef.md](https://github.com/rdf-array/rdf-array/blob/rdf-undef/docs/rdf-undef.md)):
+`termToString` spells the empty slot `undef`, so `("a" undef 3)`, and `stringToTerm` reads a bare `undef` inside `( … )` as
+`factory.undef()` (an error when the factory has none); an IRI of that spelling is `<undef>`, and outside a sequence
+`undef` is an error, like any other bare word. Status: done, tests in `test/`.
+
 ---
 
 # RDF String Turtle
